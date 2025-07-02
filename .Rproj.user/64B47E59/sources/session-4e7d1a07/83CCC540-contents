@@ -1,0 +1,10 @@
+# HTML File Carousel Viewer Shiny Application
+# Main application launcher
+
+# Source the global setup, UI, and server files
+source("global.R")
+source("ui.R") 
+source("server.R")
+
+# Run the application
+shinyApp(ui = ui, server = server)

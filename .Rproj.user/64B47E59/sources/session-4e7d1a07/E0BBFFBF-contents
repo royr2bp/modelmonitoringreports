@@ -1,0 +1,69 @@
+# Launch Script for Risk Analytics Shiny Application
+# This script provides an easy way to launch the application
+
+# Clear environment and set up
+rm(list = ls())
+cat("🚀 Initializing Risk Analytics Dashboard...\n")
+
+# Set working directory to app location if using RStudio
+if (exists("rstudioapi") && rstudioapi::isAvailable()) {
+  tryCatch({
+    setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+  }, error = function(e) {
+    cat("ℹ️  Could not set working directory automatically\n")
+  })
+}
+
+# Check if required packages are installed
+cat("📦 Checking required packages...\n")
+required_packages <- c(
+  "shiny", "shinydashboard", "DT", "plotly", 
+  "dplyr", "ggplot2", "shinycssloaders", "readxl", "tidyr"
+)
+
+missing_packages <- c()
+for (pkg in required_packages) {
+  if (!require(pkg, character.only = TRUE, quietly = TRUE)) {
+    missing_packages <- c(missing_packages, pkg)
+  }
+}
+
+if (length(missing_packages) > 0) {
+  cat("⚠️  Installing missing packages:", paste(missing_packages, collapse = ", "), "\n")
+  install.packages(missing_packages, dependencies = TRUE)
+  
+  # Re-check after installation
+  for (pkg in missing_packages) {
+    library(pkg, character.only = TRUE)
+  }
+}
+
+cat("✅ All packages ready!\n")
+
+# Create www directory if it doesn't exist
+if (!dir.exists("www")) {
+  dir.create("www")
+  cat("📁 Created www directory for assets\n")
+}
+
+# Launch the application
+cat("\n🎯 Launching Application\n")
+cat("📊 Features available:\n")
+cat("   • Interactive Dashboard with KPIs\n")
+cat("   • Data Explorer with file upload\n") 
+cat("   • Report Generation\n")
+cat("   • Risk Analysis Tools\n")
+cat("   • Model Performance Monitoring\n")
+cat("   • Application Settings\n\n")
+
+cat("🌐 The application will open in your default web browser\n")
+cat("🛑 To stop the application, press Ctrl+C in the console or close this R session\n\n")
+
+# Run the app with optimized settings
+shiny::runApp(
+  appDir = ".",
+  launch.browser = TRUE,
+  host = "127.0.0.1",
+  port = 3838,
+  display.mode = "normal"
+)

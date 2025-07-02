@@ -1,0 +1,35 @@
+# Required packages for Risk Analytics Shiny Application
+# Run this script to install all necessary packages
+
+# List of required packages
+required_packages <- c(
+  "shiny",           # Core Shiny framework
+  "shinydashboard",  # Dashboard layout and components
+  "DT",              # Interactive data tables
+  "plotly",          # Interactive plots
+  "dplyr",           # Data manipulation
+  "ggplot2",         # Static plotting
+  "shinycssloaders", # Loading spinners
+  "readxl",          # Excel file reading
+  "tidyr",           # Data tidying
+  "rmarkdown",       # Report generation
+  "knitr"            # Report knitting
+)
+
+# Function to install packages if not already installed
+install_if_missing <- function(package) {
+  if (!require(package, character.only = TRUE)) {
+    install.packages(package, dependencies = TRUE)
+    library(package, character.only = TRUE)
+  }
+}
+
+# Install missing packages
+cat("Checking and installing required packages...\n")
+for (pkg in required_packages) {
+  cat(paste("Checking:", pkg, "\n"))
+  install_if_missing(pkg)
+}
+
+cat("\nAll required packages are now installed!\n")
+cat("You can now run the application using: shiny::runApp()\n")

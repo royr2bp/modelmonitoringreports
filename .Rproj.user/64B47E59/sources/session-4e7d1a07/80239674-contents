@@ -1,0 +1,12 @@
+# Risk Analytics Shiny Application
+# Main entry point for the application
+
+# Source global configuration and utilities
+source("global.R")
+
+# Source UI and Server modules
+source("ui.R")
+source("server.R")
+
+# Run the application
+shinyApp(ui = ui, server = server)

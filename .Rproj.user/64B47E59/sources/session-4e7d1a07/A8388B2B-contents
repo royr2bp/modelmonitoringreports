@@ -1,0 +1,594 @@
+# UI Definition for Risk Analytics Application
+
+ui <- dashboardPage(
+  skin = "light",
+  # Dashboard Header
+  dashboardHeader(
+    title = tags$div(
+      style = "display: flex; align-items: center; font-weight: 600;",
+      tags$img(
+        src = "https://mma.prnewswire.com/media/1732214/BharatPe_Logo.jpg",
+        height = "32px",
+        class = "bharatpe-logo",
+        style = "margin-right: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);",
+        onerror = "handleLogoError(this)"
+      ),
+      tags$div(
+        class = "logo-fallback bharatpe-logo-fallback",
+        style = "display: none; margin-right: 15px;",
+        "BP"
+      ),
+      tags$div(
+        style = "display: flex; flex-direction: column;",
+        tags$div(
+          style = "font-size: 16px; line-height: 1.2; color: var(--text-primary);",
+          "Risk Analytics"
+        )
+      )
+    ),
+    titleWidth = 300,
+    # Add user menu in header
+    dropdownMenuOutput("headerDropdown")
+  ),
+  
+  # Dashboard Sidebar
+  dashboardSidebar(
+    width = 300,
+    tags$div(
+      class = "nav-section-header",
+      style = "padding: 20px 15px 15px 15px; border-bottom: 1px solid var(--border-color);",
+      tags$div(
+        style = "color: var(--text-muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;",
+        "NAVIGATION"
+      )
+    ),
+    sidebarMenu(
+      id = "sidebar",
+      #menuItem("Dashboard", tabName = "dashboard", icon = icon("tachometer-alt", class = "fa-fw")),
+      #menuItem("Data Explorer", tabName = "data_explorer", icon = icon("database", class = "fa-fw")),
+      menuItem("Reports", tabName = "reports", icon = icon("file-alt", class = "fa-fw"))
+      #menuItem("Risk Analysis", tabName = "risk_analysis", icon = icon("chart-line", class = "fa-fw")),
+      #menuItem("Model Performance", tabName = "model_performance", icon = icon("cogs", class = "fa-fw")),
+      #menuItem("Settings", tabName = "settings", icon = icon("sliders-h", class = "fa-fw"))
+    )
+  ),
+  
+  # Dashboard Body
+  dashboardBody(
+    # Include CSS with light theme
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "light-theme.css"),
+      tags$link(rel = "stylesheet", type = "text/css", href = "bharatpe-branding.css"),
+      tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"),
+      tags$style(HTML("
+        /* Additional inline styles for immediate application */
+        .main-header .logo {
+          background: var(--gradient-primary) !important;
+          color: white !important;
+          font-weight: 600;
+        }
+        
+        .skin-blue .main-header .navbar {
+          background: var(--header-bg) !important;
+          border-bottom: 1px solid var(--border-color);
+          box-shadow: var(--shadow-sm);
+        }
+        
+        .skin-blue .main-sidebar {
+          background: var(--sidebar-bg) !important;
+          box-shadow: var(--shadow-sm);
+        }
+        
+        /* Plotly light theme integration */
+        .js-plotly-plot .plotly .modebar {
+          background: transparent !important;
+        }
+        
+        /* Loading animation */
+        .loading-content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 200px;
+          color: var(--text-secondary);
+        }
+        
+        /* Enhanced metrics display */
+        .metric-highlight {
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
+          border: 1px solid rgba(99, 102, 241, 0.1);
+          border-radius: 12px;
+          padding: 16px;
+          margin-bottom: 16px;
+        }
+        
+        /* BharatPe Logo styling */
+        .bharatpe-logo {
+          transition: transform 0.3s ease;
+          box-shadow: var(--shadow-sm);
+        }
+        
+        .bharatpe-logo:hover {
+          transform: scale(1.05);
+        }
+        
+        /* Header branding */
+        .main-header .logo .bharatpe-brand {
+          display: flex;
+          align-items: center;
+          color: var(--text-primary) !important;
+        }
+        
+        /* Custom BharatPe colors */
+        .bharatpe-primary {
+          background: linear-gradient(135deg, #FF6B35 0%, #FF8E53 100%) !important;
+        }
+        
+        .bharatpe-accent {
+          color: #FF6B35 !important;
+        }
+        
+        /* Modern box shadows for cards */
+        .box {
+          box-shadow: var(--shadow-sm) !important;
+          border-radius: 12px !important;
+          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+          border: 1px solid var(--border-color) !important;
+        }
+        
+        .box:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: var(--shadow-md) !important;
+        }
+      ")),
+      tags$script(HTML("
+        // Logo fallback handling
+        function handleLogoError(img) {
+          img.style.display = 'none';
+          var fallback = img.nextElementSibling;
+          if (fallback && fallback.classList.contains('logo-fallback')) {
+            fallback.style.display = 'inline-flex';
+          }
+        }
+        
+        // Initialize logo error handling
+        document.addEventListener('DOMContentLoaded', function() {
+          var logos = document.querySelectorAll('.bharatpe-logo');
+          logos.forEach(function(logo) {
+            logo.addEventListener('error', function() {
+              handleLogoError(this);
+            });
+          });
+        });
+      "))
+    ),
+    
+    tabItems(
+      # Dashboard Tab
+      tabItem(
+        tabName = "dashboard",
+        # Header section with welcome message
+        fluidRow(
+          div(class = "col-md-12",
+              div(style = "background: var(--gradient-primary); padding: 30px; border-radius: 16px; margin-bottom: 30px; color: white; position: relative; overflow: hidden; box-shadow: var(--shadow-md);",
+                  # Background pattern
+                  tags$div(
+                    style = "position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.05); border-radius: 50%; pointer-events: none;"
+                  ),
+                  tags$div(
+                    style = "position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.03); border-radius: 50%; pointer-events: none;"
+                  ),
+                  # Content
+                  tags$div(
+                    style = "position: relative; z-index: 2;",
+                    div(style = "display: flex; align-items: center; margin-bottom: 15px;",
+                        tags$img(
+                          src = "https://mma.prnewswire.com/media/1732214/BharatPe_Logo.jpg",
+                          height = "40px",
+                          class = "bharatpe-logo",
+                          style = "margin-right: 15px; border-radius: 6px; background: white; padding: 4px;",
+                          onerror = "handleLogoError(this)"
+                        ),
+                        tags$div(
+                          class = "logo-fallback bharatpe-logo-fallback",
+                          style = "display: none; margin-right: 15px; width: 40px; height: 40px; font-size: 16px;",
+                          "BP"
+                        ),
+                        div(
+                          h2(style = "margin: 0; font-weight: 600; font-size: 28px;", "BharatPe Risk Analytics"),
+                          div(style = "font-size: 14px; opacity: 0.9; margin-top: 2px;", "Enterprise Risk Management Dashboard")
+                        )
+                    ),
+                    p(style = "margin: 0; opacity: 0.9; font-size: 16px; line-height: 1.5;", 
+                      "Comprehensive insights into your risk portfolio and performance metrics. Powered by advanced analytics and machine learning.")
+                  )
+              )
+          )
+        ),
+        fluidRow(
+          # Key Metrics Row with enhanced styling
+          div(class = "col-md-3",
+              div(class = "metric-card fade-in-up",
+                  div(class = "metric-value", textOutput("total_records_text")),
+                  div(class = "metric-label", "Total Records"),
+                  div(style = "margin-top: 8px;",
+                      tags$i(class = "fa fa-database", style = "color: var(--accent-color); margin-right: 6px;"),
+                      span(style = "color: var(--text-secondary); font-size: 12px;", "Active portfolio")
+                  )
+              )
+          ),
+          div(class = "col-md-3",
+              div(class = "metric-card fade-in-up",
+                  div(class = "metric-value", style = "color: var(--danger-color);", textOutput("high_risk_count_text")),
+                  div(class = "metric-label", "High Risk Items"),
+                  div(style = "margin-top: 8px;",
+                      tags$i(class = "fa fa-exclamation-triangle", style = "color: var(--danger-color); margin-right: 6px;"),
+                      span(style = "color: var(--text-secondary); font-size: 12px;", "Requires attention")
+                  )
+              )
+          ),
+          div(class = "col-md-3",
+              div(class = "metric-card fade-in-up",
+                  div(class = "metric-value", style = "color: var(--success-color);", textOutput("model_accuracy_text")),
+                  div(class = "metric-label", "Model Accuracy"),
+                  div(style = "margin-top: 8px;",
+                      tags$i(class = "fa fa-target", style = "color: var(--success-color); margin-right: 6px;"),
+                      span(style = "color: var(--text-secondary); font-size: 12px;", "Current performance")
+                  )
+              )
+          ),
+          div(class = "col-md-3",
+              div(class = "metric-card fade-in-up",
+                  div(class = "metric-value", style = "color: var(--warning-color);", textOutput("last_updated_text")),
+                  div(class = "metric-label", "Last Updated"),
+                  div(style = "margin-top: 8px;",
+                      tags$i(class = "fa fa-clock", style = "color: var(--warning-color); margin-right: 6px;"),
+                      span(style = "color: var(--text-secondary); font-size: 12px;", "Data freshness")
+                  )
+              )
+          )
+        ),
+        fluidRow(
+          # Risk Distribution Chart with enhanced styling
+          box(
+            title = tags$div(
+              style = "display: flex; align-items: center;",
+              tags$i(class = "fa fa-chart-pie", style = "margin-right: 10px; color: var(--accent-color);"),
+              "Risk Distribution Analysis"
+            ),
+            status = "primary",
+            solidHeader = TRUE,
+            width = 8,
+            div(style = "min-height: 400px;",
+                withSpinner(
+                  plotlyOutput("risk_distribution_chart", height = "380px"),
+                  type = 4,
+                  color = "var(--accent-color)"
+                )
+            )
+          ),
+          # Enhanced Quick Stats
+          box(
+            title = tags$div(
+              style = "display: flex; align-items: center;",
+              tags$i(class = "fa fa-info-circle", style = "margin-right: 10px; color: var(--accent-color);"),
+              "Portfolio Insights"
+            ),
+            status = "info",
+            solidHeader = TRUE,
+            width = 4,
+            div(style = "padding: 10px;",
+                div(class = "metric-highlight",
+                    div(style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;",
+                        span(style = "font-weight: 500; color: var(--text-primary);", "Portfolio Health"),
+                        tags$i(class = "fa fa-heart-pulse", style = "color: var(--success-color);")
+                    ),
+                    tableOutput("quick_stats_table")
+                ),
+                div(style = "margin-top: 20px; padding: 16px; background: rgba(99, 102, 241, 0.05); border-radius: 8px; border-left: 4px solid var(--accent-color);",
+                    h5(style = "margin: 0 0 10px 0; color: var(--text-primary); font-weight: 600;", "Key Highlights"),
+                    tags$ul(style = "margin: 0; padding-left: 20px; color: var(--text-secondary);",
+                            tags$li("Real-time risk monitoring"),
+                            tags$li("Automated alert system"),
+                            tags$li("ML-powered predictions")
+                    )
+                )
+            )
+          )
+        ),
+        fluidRow(
+          # Enhanced Recent Activity
+          box(
+            title = tags$div(
+              style = "display: flex; align-items: center; justify-content: space-between; width: 100%;",
+              tags$div(
+                style = "display: flex; align-items: center;",
+                tags$i(class = "fa fa-history", style = "margin-right: 10px; color: var(--accent-color);"),
+                "Recent Activity & System Events"
+              ),
+              tags$div(
+                style = "display: flex; gap: 10px;",
+                actionButton("refresh_activity", "Refresh", 
+                             class = "btn btn-sm", 
+                             style = "background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); padding: 6px 12px;"),
+                tags$span(style = "color: var(--text-muted); font-size: 12px; padding: 8px;", 
+                          "Auto-refresh: 30s")
+              )
+            ),
+            status = "warning",
+            solidHeader = TRUE,
+            width = 12,
+            div(style = "min-height: 300px;",
+                withSpinner(
+                  DT::dataTableOutput("recent_activity_table"),
+                  type = 4,
+                  color = "var(--warning-color)"
+                )
+            )
+          )
+        )
+      ),
+      
+      # Data Explorer Tab
+      tabItem(
+        tabName = "data_explorer",
+        fluidRow(
+          box(
+            title = "Data Upload and Management",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 12,
+            fluidRow(
+              column(6,
+                     fileInput("data_file", "Upload CSV File",
+                               accept = c(".csv", ".xlsx")),
+                     actionButton("load_sample_data", "Load Sample Data", 
+                                  class = "btn-info")
+              ),
+              column(6,
+                     selectInput("dataset_selector", "Select Dataset:",
+                                 choices = c("Upload a file..." = "none"),
+                                 selected = "none"),
+                     downloadButton("download_data", "Download Current Data",
+                                    class = "btn-success")
+              )
+            )
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Data Summary",
+            status = "info",
+            solidHeader = TRUE,
+            width = 4,
+            verbatimTextOutput("data_summary")
+          ),
+          box(
+            title = "Column Information",
+            status = "info",
+            solidHeader = TRUE,
+            width = 8,
+            DT::dataTableOutput("column_info_table")
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Data Preview",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 12,
+            withSpinner(DT::dataTableOutput("data_preview_table"))
+          )
+        )
+      ),
+      
+      # Reports Tab
+      tabItem(
+        tabName = "reports",
+        fluidRow(
+          box(
+            title = "Report Generation",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 4,
+            selectInput("report_type", "Select Report Type:",
+                        choices = c("Risk Summary Report" = "risk_summary",
+                                    "Model Performance Report" = "model_performance",
+                                    "Data Quality Report" = "data_quality",
+                                    "Custom Report" = "custom")),
+            dateRangeInput("report_date_range", "Date Range:",
+                           start = Sys.Date() - 30,
+                           end = Sys.Date()),
+            selectInput("report_format", "Output Format:",
+                        choices = c("PDF" = "pdf",
+                                    "HTML" = "html",
+                                    "Word" = "docx")),
+            actionButton("generate_report", "Generate Report",
+                         class = "btn-primary"),
+            br(), br(),
+            downloadButton("download_report", "Download Report",
+                           class = "btn-success")
+          ),
+          box(
+            title = "Report Preview",
+            status = "info",
+            solidHeader = TRUE,
+            width = 8,
+            withSpinner(htmlOutput("report_preview"))
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Report History",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 12,
+            DT::dataTableOutput("report_history_table")
+          )
+        )
+      ),
+      
+      # Risk Analysis Tab
+      tabItem(
+        tabName = "risk_analysis",
+        fluidRow(
+          box(
+            title = "Risk Analysis Controls",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 4,
+            selectInput("risk_metric", "Risk Metric:",
+                        choices = c("Default Probability" = "default_prob",
+                                    "Credit Score" = "credit_score",
+                                    "Risk Rating" = "risk_rating")),
+            sliderInput("risk_threshold", "Risk Threshold:",
+                        min = 0, max = 1, value = 0.5, step = 0.01),
+            selectInput("segment_by", "Segment Analysis By:",
+                        choices = c("None" = "none",
+                                    "Industry" = "industry",
+                                    "Geography" = "geography",
+                                    "Customer Type" = "customer_type")),
+            actionButton("run_analysis", "Run Analysis",
+                         class = "btn-primary")
+          ),
+          box(
+            title = "Risk Distribution",
+            status = "info",
+            solidHeader = TRUE,
+            width = 8,
+            withSpinner(plotlyOutput("risk_analysis_chart"))
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Risk Correlation Matrix",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 6,
+            withSpinner(plotlyOutput("correlation_matrix"))
+          ),
+          box(
+            title = "Risk Segmentation",
+            status = "success",
+            solidHeader = TRUE,
+            width = 6,
+            withSpinner(plotlyOutput("risk_segmentation_chart"))
+          )
+        ),
+        fluidRow(
+          box(
+            title = "High Risk Items",
+            status = "danger",
+            solidHeader = TRUE,
+            width = 12,
+            DT::dataTableOutput("high_risk_table")
+          )
+        )
+      ),
+      
+      # Model Performance Tab
+      tabItem(
+        tabName = "model_performance",
+        fluidRow(
+          box(
+            title = "Model Selection",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 4,
+            selectInput("model_name", "Select Model:",
+                        choices = c("Default Model" = "default",
+                                    "Credit Scoring Model" = "credit",
+                                    "Risk Rating Model" = "risk_rating")),
+            dateRangeInput("performance_date_range", "Performance Period:",
+                           start = Sys.Date() - 90,
+                           end = Sys.Date()),
+            actionButton("refresh_performance", "Refresh Metrics",
+                         class = "btn-info")
+          ),
+          box(
+            title = "Model Metrics",
+            status = "info",
+            solidHeader = TRUE,
+            width = 8,
+            fluidRow(
+              valueBoxOutput("model_auc", width = 4),
+              valueBoxOutput("model_accuracy_perf", width = 4),
+              valueBoxOutput("model_precision", width = 4)
+            )
+          )
+        ),
+        fluidRow(
+          box(
+            title = "ROC Curve",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 6,
+            withSpinner(plotlyOutput("roc_curve"))
+          ),
+          box(
+            title = "Performance Trends",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 6,
+            withSpinner(plotlyOutput("performance_trends"))
+          )
+        ),
+        fluidRow(
+          box(
+            title = "Feature Importance",
+            status = "success",
+            solidHeader = TRUE,
+            width = 12,
+            withSpinner(plotlyOutput("feature_importance"))
+          )
+        )
+      ),
+      
+      # Settings Tab
+      tabItem(
+        tabName = "settings",
+        fluidRow(
+          box(
+            title = "Application Settings",
+            status = "primary",
+            solidHeader = TRUE,
+            width = 6,
+            h4("Display Settings"),
+            selectInput("theme", "Dashboard Theme:",
+                        choices = c("Blue" = "blue",
+                                    "Black" = "black",
+                                    "Purple" = "purple",
+                                    "Green" = "green")),
+            numericInput("refresh_interval", "Auto-refresh Interval (seconds):",
+                         value = 300, min = 30, max = 3600),
+            checkboxInput("enable_notifications", "Enable Notifications", value = TRUE),
+            actionButton("save_settings", "Save Settings", class = "btn-success")
+          ),
+          box(
+            title = "Data Settings",
+            status = "info",
+            solidHeader = TRUE,
+            width = 6,
+            h4("Default Parameters"),
+            numericInput("default_risk_threshold", "Default Risk Threshold:",
+                         value = 0.5, min = 0, max = 1, step = 0.01),
+            selectInput("default_currency", "Default Currency:",
+                        choices = c("USD" = "USD", "EUR" = "EUR", "GBP" = "GBP")),
+            numericInput("max_records_display", "Max Records to Display:",
+                         value = 1000, min = 100, max = 10000),
+            actionButton("reset_settings", "Reset to Defaults", class = "btn-warning")
+          )
+        ),
+        fluidRow(
+          box(
+            title = "System Information",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 12,
+            verbatimTextOutput("system_info")
+          )
+        )
+      )
+    )
+  )
+)
