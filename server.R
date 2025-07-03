@@ -1,258 +1,266 @@
 # Server logic for HTML File Viewer Shiny Application
+library(shiny)
+library(shinydashboard)
+library(DT)
+library(shinyjs)
 
 server <- function(input, output, session) {
-  
-  # Reactive value to store file list
-  file_list <- reactiveVal()
-  
-  # Function to update file list
-  update_file_list <- function() {
-    file_info <- get_file_list()
-    file_list(file_info)
-    
-    # Send carousel update message to JavaScript
-    session$sendCustomMessage("updateCarouselData", list(
-      totalFiles = nrow(file_info)
-    ))
+
+  # Define the upload directory
+  upload_dir <- "uploaded_files"
+
+  # Create upload directory if it doesn't exist
+  if (!dir.exists(upload_dir)) {
+    dir.create(upload_dir, recursive = TRUE)
   }
-  
-  # Initialize file list on startup
+
+  # Add resource path to serve HTML
+  addResourcePath("reports", upload_dir)
+
+  # Reactive values
+  values <- reactiveValues(
+    files = NULL,
+    selected_file = NULL
+  )
+
+  # Function to scan for HTML files
+  scan_files <- function() {
+    if (dir.exists(upload_dir)) {
+      files <- list.files(upload_dir, pattern = "\\.(html|htm)$", ignore.case = TRUE, full.names = FALSE)
+      if (length(files) > 0) {
+        file_info <- file.info(file.path(upload_dir, files))
+        data.frame(
+          filename = files,
+          size = round(file_info$size / 1024, 2),
+          modified = format(file_info$mtime, "%Y-%m-%d %H:%M"),
+          stringsAsFactors = FALSE
+        )
+      } else {
+        data.frame(filename = character(0), size = numeric(0), modified = character(0))
+      }
+    } else {
+      data.frame(filename = character(0), size = numeric(0), modified = character(0))
+    }
+  }
+
+  # Initialize file list
   observe({
-    update_file_list()
+    values$files <- scan_files()
   })
-  
+
   # Check if files exist
   output$has_files <- reactive({
-    nrow(file_list()) > 0
+    !is.null(values$files) && nrow(values$files) > 0
   })
   outputOptions(output, "has_files", suspendWhenHidden = FALSE)
-  
-  # Generate carousel file cards
-  output$carousel_files <- renderUI({
-    files <- file_list()
-    if (nrow(files) == 0) return(NULL)
-    
-    file_cards <- lapply(1:nrow(files), function(i) {
-      create_file_card(
-        filename = files$filename[i],
-        size = files$size[i], 
-        modified = files$modified[i],
-        index = i
-      )
-    })
-    
-    do.call(tagList, file_cards)
-  })
-  
-  # Generate carousel indicators
-  output$carousel_indicators <- renderUI({
-    files <- file_list()
-    if (nrow(files) == 0) return(NULL)
-    
-    # Calculate number of slides needed
-    card_width <- 300
-    viewport_width <- 1200  # Approximate viewport width
-    cards_per_slide <- max(1, floor(viewport_width / card_width))
-    num_slides <- ceiling(nrow(files) / cards_per_slide)
-    
-    if (num_slides <= 1) return(NULL)
-    
-    indicators <- lapply(1:num_slides, function(i) {
-      div(
-        class = if (i == 1) "carousel-dot active" else "carousel-dot",
-        onclick = paste0("goToSlide(", i-1, ")")
-      )
-    })
-    
-    do.call(tagList, indicators)
-  })
-  
-  # Handle file upload
-  observeEvent(input$upload_btn, {
-    req(input$file)
-    
-    tryCatch({
-      uploaded_files <- input$file
-      success_count <- 0
-      
-      for (i in 1:nrow(uploaded_files)) {
-        file_info <- uploaded_files[i, ]
-        
-        # Create a unique filename to avoid conflicts
-        timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-        original_name <- tools::file_path_sans_ext(file_info$name)
-        extension <- tools::file_ext(file_info$name)
-        new_filename <- paste0(original_name, "_", timestamp, ".", extension)
-        
-        # Copy file to uploads directory
-        file.copy(file_info$datapath, file.path("uploads", new_filename))
-        success_count <- success_count + 1
-      }
-      
-      # Update file list
-      update_file_list()
-      
-      output$upload_status <- renderText({
-        if (success_count == 1) {
-          "✓ Analytics report uploaded successfully!"
-        } else {
-          paste("✓", success_count, "analytics reports uploaded successfully!")
-        }
-      })
-      
-      # Show notification
-      showNotification(
-        paste("�", success_count, "report(s) uploaded to library!"), 
-        type = "message", 
-        duration = 3
-      )
-      
-    }, error = function(e) {
-      output$upload_status <- renderText({
-        paste("✗ Error uploading report(s):", e$message)
-      })
-    })
-  })
-  
-  # Handle file selection from carousel
-  observeEvent(input$selected_file_carousel, {
-    if (!is.null(input$selected_file_carousel)) {
-      output$selected_file_display <- renderText({
-        paste("� Selected Report:", input$selected_file_carousel)
-      })
-    }
-  })
-  
-  # Handle serve button for selected file
+
+  # Handle file serving for carousel
   observeEvent(input$serve_selected, {
     req(input$selected_file_carousel)
-    serve_file_in_fullscreen(input$selected_file_carousel)
+
+    # Validate file exists
+    file_path <- file.path(upload_dir, input$selected_file_carousel)
+    if (file.exists(file_path)) {
+      # Create the URL using the resource path
+      file_url <- paste0(session$clientData$url_protocol, "//",
+                        session$clientData$url_hostname, ":",
+                        session$clientData$url_port,
+                        session$clientData$url_pathname,
+                        "reports/", input$selected_file_carousel)
+
+      # Send custom message to JavaScript to open the file
+      session$sendCustomMessage("openFullScreen", list(
+        url = file_url,
+        filename = input$selected_file_carousel
+      ))
+    } else {
+      showNotification("File not found!", type = "error")
+    }
   })
-  
-  # Handle direct serve from carousel cards
-  observeEvent(input$serve_file_carousel, {
-    req(input$serve_file_carousel)
-    serve_file_in_fullscreen(input$serve_file_carousel)
-  })
-  
-  # Function to serve file in fullscreen
-  serve_file_in_fullscreen <- function(filename) {
-    tryCatch({
-      file_path <- file.path("uploads", filename)
-      
-      if (file.exists(file_path)) {
-        # Copy file to www directory for serving
-        www_dir <- "www"
-        if (!dir.exists(www_dir)) {
-          dir.create(www_dir)
-        }
-        
-        # Copy file to www directory
-        file.copy(file_path, file.path(www_dir, filename), overwrite = TRUE)
-        
-        # Create URL and open in fullscreen
-        url <- paste0(session$clientData$url_protocol, "//", 
-                     session$clientData$url_hostname, ":", 
-                     session$clientData$url_port, "/", 
-                     filename)
-        
-        # Use JavaScript to open in fullscreen
-        session$sendCustomMessage("openFullScreen", list(url = url))
-        
-        # Show notification
-        showNotification(
-          paste("🚀 Launching", filename, "in analytics viewer!"), 
-          type = "message", 
-          duration = 4
+
+  # Generate carousel content
+  output$carousel_files <- renderUI({
+    req(values$files)
+
+    if (nrow(values$files) == 0) {
+      return(div())
+    }
+
+    # Send total files count to JavaScript
+    session$sendCustomMessage("updateCarouselData", list(totalFiles = nrow(values$files)))
+
+    # Create file cards
+    file_cards <- lapply(1:nrow(values$files), function(i) {
+      file_info <- values$files[i, ]
+
+      div(class = "file-card",
+        onclick = paste0("selectFile('", file_info$filename, "')"),
+        div(class = "card",
+          div(class = "card-header",
+            h5(file_info$filename)
+          ),
+          div(class = "card-body",
+            p(strong("Size: "), paste0(file_info$size, " KB")),
+            p(strong("Modified: "), file_info$modified),
+            div(style = "margin-top: 10px;",
+              actionButton(paste0("quick_serve_", i), "Quick View",
+                         class = "btn-info btn-sm",
+                         onclick = paste0("serveFile('", file_info$filename, "')"))
+            )
+          )
         )
-        
-      } else {
-        showNotification("❌ Report not found", type = "error", duration = 3)
-      }
-      
-    }, error = function(e) {
-      showNotification(
-        paste("❌ Error launching report:", e$message), 
-        type = "error", 
-        duration = 4
       )
     })
-  }
-  
-  # Navigate to upload tab
-  observeEvent(input$go_to_upload, {
-    updateTabItems(session, "sidebarMenu", "upload")
+
+    do.call(tagList, file_cards)
   })
-  
-  # Render files table for manager
-  output$files_table <- DT::renderDataTable({
-    req(file_list())
-    files <- file_list()
-    if (nrow(files) > 0) {
-      files[, c("filename", "size", "modified")]
-    } else {
-      data.frame(
-        filename = character(0),
-        size = character(0),
-        modified = character(0)
-      )
-    }
-  }, options = list(
-    pageLength = 15, 
-    scrollX = TRUE,
-    dom = 'Bfrtip',
-    columnDefs = list(list(className = 'dt-center', targets = "_all"))
-  ), selection = 'single', class = 'cell-border stripe hover')
-  
-  # Handle refresh button
-  observeEvent(input$refresh_btn, {
-    update_file_list()
-    showNotification("📋 Report library refreshed successfully!", type = "message", duration = 3)
+
+  # Generate carousel indicators
+  output$carousel_indicators <- renderUI({
+    req(values$files)
+
+    if (nrow(values$files) <= 3) return(div()) # Don't show indicators if all files are visible
+
+    indicators <- lapply(0:(nrow(values$files) - 1), function(i) {
+      div(class = "carousel-dot", onclick = paste0("goToSlide(", i, ")"))
+    })
+
+    do.call(tagList, indicators)
   })
-  
-  # Handle delete button
-  observeEvent(input$delete_btn, {
-    req(input$files_table_rows_selected)
-    
-    selected_row <- input$files_table_rows_selected
-    files <- file_list()
-    file_to_delete <- files$filename[selected_row]
-    
-    showModal(modalDialog(
-      title = "⚠️ Confirm Deletion",
-      div(style = "padding: 10px;",
-        h4("Are you sure you want to remove this report?", style = "color: #dc3545;"),
-        p(paste("Report:", file_to_delete), style = "font-weight: bold; color: #495057;"),
-        p("This action cannot be undone.", style = "color: #6c757d; font-style: italic;")
-      ),
-      footer = tagList(
-        modalButton("Cancel"),
-        actionButton("confirm_delete", "Remove Report", class = "btn-danger", icon = icon("trash-alt"))
-      ),
-      size = "m"
-    ))
+
+  # Handle quick serve from carousel
+  observe({
+    req(values$files)
+
+    lapply(1:nrow(values$files), function(i) {
+      observeEvent(input[[paste0("quick_serve_", i)]], {
+        filename <- values$files$filename[i]
+        file_path <- file.path(upload_dir, filename)
+
+        if (file.exists(file_path)) {
+          file_url <- paste0(session$clientData$url_protocol, "//",
+                            session$clientData$url_hostname, ":",
+                            session$clientData$url_port,
+                            session$clientData$url_pathname,
+                            "reports/", filename)
+
+          session$sendCustomMessage("openFullScreen", list(
+            url = file_url,
+            filename = filename
+          ))
+        } else {
+          showNotification("File not found!", type = "error")
+        }
+      })
+    })
   })
-  
-  # Handle confirmed deletion
-  observeEvent(input$confirm_delete, {
-    req(input$files_table_rows_selected)
-    
-    selected_row <- input$files_table_rows_selected
-    files <- file_list()
-    file_to_delete <- files$filename[selected_row]
-    file_path <- file.path("uploads", file_to_delete)
-    
-    if (file.exists(file_path)) {
-      file.remove(file_path)
-      update_file_list()
-      showNotification(paste("🗑️ Deleted:", file_to_delete), type = "warning", duration = 4)
-      
-      # Clear selection if deleted file was selected
-      if (!is.null(input$selected_file_carousel) && input$selected_file_carousel == file_to_delete) {
-        session$sendCustomMessage("clearSelection", list())
+
+  # Display selected file name
+  output$selected_file_display <- renderText({
+    req(input$selected_file_carousel)
+    paste("File:", input$selected_file_carousel)
+  })
+
+  # File upload handling
+  observeEvent(input$upload_btn, {
+    req(input$file)
+
+    uploaded_count <- 0
+    error_count <- 0
+
+    for (i in 1:nrow(input$file)) {
+      file_info <- input$file[i, ]
+
+      # Check if it's an HTML file
+      if (grepl("\\.(html|htm)$", file_info$name, ignore.case = TRUE)) {
+        # Copy file to upload directory
+        file.copy(file_info$datapath, file.path(upload_dir, file_info$name), overwrite = TRUE)
+        uploaded_count <- uploaded_count + 1
+      } else {
+        error_count <- error_count + 1
       }
     }
-    
+
+    # Update file list
+    values$files <- scan_files()
+
+    # Show notification
+    if (uploaded_count > 0) {
+      showNotification(paste("Successfully uploaded", uploaded_count, "file(s)"), type = "message")
+    }
+    if (error_count > 0) {
+      showNotification(paste(error_count, "file(s) were not HTML files and were skipped"), type = "warning")
+    }
+  })
+
+  # File manager table
+  output$files_table <- DT::renderDataTable({
+    req(values$files)
+    values$files
+  }, options = list(
+    pageLength = 10,
+    searching = TRUE,
+    ordering = TRUE
+  ), selection = "multiple")
+
+  # Refresh file list
+  observeEvent(input$refresh_btn, {
+    values$files <- scan_files()
+    showNotification("File list refreshed", type = "message")
+  })
+
+  # Delete selected files
+  observeEvent(input$delete_btn, {
+    selected_rows <- input$files_table_rows_selected
+
+    if (length(selected_rows) > 0) {
+      files_to_delete <- values$files$filename[selected_rows]
+
+      # Show confirmation modal
+      showModal(modalDialog(
+        title = "Confirm Deletion",
+        paste("Are you sure you want to delete", length(files_to_delete), "file(s)?"),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("confirm_delete", "Delete", class = "btn-danger")
+        )
+      ))
+    } else {
+      showNotification("Please select files to delete", type = "warning")
+    }
+  })
+
+  # Confirm deletion
+  observeEvent(input$confirm_delete, {
+    selected_rows <- input$files_table_rows_selected
+
+    if (length(selected_rows) > 0) {
+      files_to_delete <- values$files$filename[selected_rows]
+      deleted_count <- 0
+
+      for (filename in files_to_delete) {
+        file_path <- file.path(upload_dir, filename)
+        if (file.exists(file_path)) {
+          file.remove(file_path)
+          deleted_count <- deleted_count + 1
+        }
+      }
+
+      # Update file list
+      values$files <- scan_files()
+
+      showNotification(paste("Deleted", deleted_count, "file(s)"), type = "message")
+    }
+
     removeModal()
+  })
+
+  # Upload status output
+  output$upload_status <- renderText({
+    if (!is.null(input$file)) {
+      paste("Ready to upload", nrow(input$file), "file(s)")
+    } else {
+      "No files selected"
+    }
   })
 }
