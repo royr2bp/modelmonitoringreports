@@ -1,7 +1,12 @@
 # UI for HTML File Viewer Shiny Application
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Model Monitoring Reports"),
+  dashboardHeader(
+    title = "Model Monitoring Reports",
+    tags$li(class = "dropdown", style = "padding: 8px;",
+      shinyauthr::logoutUI("logout")
+    )
+  ),
 
   dashboardSidebar(
     sidebarMenu(id = "sidebar",
@@ -12,7 +17,15 @@ ui <- dashboardPage(
   ),
 
   dashboardBody(
-    useShinyjs(),
+    shinyjs::useShinyjs(),
+
+    # Authentication UI
+    div(id = "login-content", style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
+      shinyauthr::loginUI(id = "login", title = "Login")
+    ),
+
+    # Main application content (hidden until authenticated)
+    hidden(div(id = "main-content",
 
     # Custom CSS for Alteryx-style professional interface
     tags$head(
@@ -708,6 +721,69 @@ ui <- dashboardPage(
           )
         )
       )
+    )
+    )), # Close main-content hidden div
+
+    # Add authentication-specific CSS
+    tags$head(
+      tags$style(HTML("
+        /* Login form styling */
+        #login-content {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+          z-index: 1000;
+        }
+
+        .login-box {
+          padding: 30px;
+          text-align: center;
+        }
+
+        #login-user, #login-password {
+          width: 100%;
+          padding: 12px;
+          margin: 8px 0;
+          border: 1px solid #dadce0;
+          border-radius: 6px;
+          font-size: 14px;
+        }
+
+        #login-button {
+          background-color: #1f77b4;
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          width: 100%;
+          margin-top: 15px;
+        }
+
+        #login-button:hover {
+          background-color: #1a5490;
+        }
+
+        /* Logout button styling */
+        #logout-logout {
+          background-color: #d62728;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+
+        #logout-logout:hover {
+          background-color: #c53030;
+        }
+      "))
     )
   )
 )

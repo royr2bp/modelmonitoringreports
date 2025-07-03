@@ -6,6 +6,37 @@ library(shinyjs)
 
 server <- function(input, output, session) {
 
+  # Authentication logic
+  logout_init <- shinyauthr::logoutServer(
+    id = "logout",
+    active = reactive(credentials()$user_auth)
+  )
+
+  credentials <- shinyauthr::loginServer(
+    id = "login",
+    data = user_base,
+    user_col = user,
+    pwd_col = password,
+    sodium_hashed = TRUE,
+    log_out = reactive(logout_init())
+  )
+
+  # Show/hide content based on authentication
+  observe({
+    if (credentials()$user_auth) {
+      shinyjs::hide("login-content")
+      shinyjs::show("main-content")
+    } else {
+      shinyjs::show("login-content")
+      shinyjs::hide("main-content")
+    }
+  })
+
+  # User info for role-based access
+  user_info <- reactive({
+    credentials()$info
+  })
+
   # Define the upload directory
   upload_dir <- "uploaded_files"
 
@@ -45,17 +76,20 @@ server <- function(input, output, session) {
 
   # Initialize file list
   observe({
+    req(credentials()$user_auth)  # Require authentication
     values$files <- scan_files()
   })
 
   # Check if files exist
   output$has_files <- reactive({
+    req(credentials()$user_auth)  # Require authentication
     !is.null(values$files) && nrow(values$files) > 0
   })
   outputOptions(output, "has_files", suspendWhenHidden = FALSE)
 
   # Handle file serving for carousel
   observeEvent(input$serve_selected, {
+    req(credentials()$user_auth)  # Require authentication
     req(input$selected_file_carousel)
 
     # Validate file exists
@@ -80,6 +114,7 @@ server <- function(input, output, session) {
 
   # Generate carousel content
   output$carousel_files <- renderUI({
+    req(credentials()$user_auth)  # Require authentication
     req(values$files)
 
     if (nrow(values$files) == 0) {
@@ -117,6 +152,7 @@ server <- function(input, output, session) {
 
   # Generate carousel indicators
   output$carousel_indicators <- renderUI({
+    req(credentials()$user_auth)  # Require authentication
     req(values$files)
 
     if (nrow(values$files) <= 3) return(div()) # Don't show indicators if all files are visible
@@ -157,12 +193,14 @@ server <- function(input, output, session) {
 
   # Display selected file name
   output$selected_file_display <- renderText({
+    req(credentials()$user_auth)  # Require authentication
     req(input$selected_file_carousel)
     paste("File:", input$selected_file_carousel)
   })
 
   # File upload handling
   observeEvent(input$upload_btn, {
+    req(credentials()$user_auth)  # Require authentication
     req(input$file)
 
     uploaded_count <- 0
@@ -195,6 +233,7 @@ server <- function(input, output, session) {
 
   # File manager table
   output$files_table <- DT::renderDataTable({
+    req(credentials()$user_auth)  # Require authentication
     req(values$files)
     values$files
   }, options = list(
@@ -205,12 +244,16 @@ server <- function(input, output, session) {
 
   # Refresh file list
   observeEvent(input$refresh_btn, {
+    req(credentials()$user_auth)  # Require authentication
     values$files <- scan_files()
     showNotification("File list refreshed", type = "message")
   })
 
   # Delete selected files
   observeEvent(input$delete_btn, {
+    req(credentials()$user_auth)  # Require authentication
+    # Only allow admin users to delete files
+    req(user_info()$permissions == "admin")
     selected_rows <- input$files_table_rows_selected
 
     if (length(selected_rows) > 0) {
@@ -232,6 +275,8 @@ server <- function(input, output, session) {
 
   # Confirm deletion
   observeEvent(input$confirm_delete, {
+    req(credentials()$user_auth)  # Require authentication
+    req(user_info()$permissions == "admin")  # Only admin can delete
     selected_rows <- input$files_table_rows_selected
 
     if (length(selected_rows) > 0) {
@@ -257,10 +302,27 @@ server <- function(input, output, session) {
 
   # Upload status output
   output$upload_status <- renderText({
+    req(credentials()$user_auth)  # Require authentication
     if (!is.null(input$file)) {
       paste("Ready to upload", nrow(input$file), "file(s)")
     } else {
       "No files selected"
     }
+  })
+
+  # Control delete button visibility based on user permissions
+  observe({
+    req(credentials()$user_auth)
+    if (user_info()$permissions == "admin") {
+      shinyjs::show("delete_btn")
+    } else {
+      shinyjs::hide("delete_btn")
+    }
+  })
+
+  # Navigation to upload tab
+  observeEvent(input$go_to_upload, {
+    req(credentials()$user_auth)  # Require authentication
+    updateTabItems(session, "sidebar", "upload")
   })
 }

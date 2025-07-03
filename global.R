@@ -6,6 +6,19 @@ library(shinydashboard)
 library(DT)
 library(htmltools)
 library(shinyjs)
+library(shinyauthr)
+library(sodium)
+
+# Authentication setup
+# Create user credentials data frame with hashed passwords
+user_base <- data.frame(
+  user = c("admin"),
+  password = sapply(c("admin@risk"), sodium::password_store),
+  permissions = c("admin"),
+  name = c("Administrator"),
+  stringsAsFactors = FALSE,
+  row.names = NULL
+)
 
 # Create uploads directory if it doesn't exist
 if (!dir.exists("uploads")) {
