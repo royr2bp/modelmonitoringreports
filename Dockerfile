@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     libxml2-dev \
     libxt6 \
+    r-cran-sodium \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R packages
