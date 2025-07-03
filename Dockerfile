@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages(c('shiny', 'shinydashboard', 'DT', 'htmltools', 'shinyjs', 'sodium', 'scrypt'), repos='https://cran.rstudio.com/')"
 
 # Install shinyauthr from GitHub
-RUN R -e "install.packages('remotes', repos='https://cran.rstudio.com/'); remotes::install_github('paulc91/shinyauthr'); devtools::install_github('jedisct1/libsodium')"
+RUN R -e "install.packages('remotes', repos='https://cran.rstudio.com/'); remotes::install_github('paulc91/shinyauthr'); remotes::install_github('jedisct1/libsodium')"
 
 # Remove the default shiny app
 RUN rm -rf /srv/shiny-server/*
