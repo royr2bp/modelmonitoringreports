@@ -1,5 +1,5 @@
 # Use the official R base image with Shiny Server
-FROM rocker/shiny:4.3.1
+FROM rocker/shiny:latest
 
 # Set the maintainer label
 LABEL maintainer="your-email@example.com"
