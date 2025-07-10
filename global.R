@@ -12,10 +12,10 @@ library(sodium)
 # Authentication setup
 # Create user credentials data frame with hashed passwords
 user_base <- data.frame(
-  user = c("admin"),
-  password = sapply(c("admin@risk"), sodium::password_store),
-  permissions = c("admin"),
-  name = c("Administrator"),
+  user = c("admin", "user"),
+  password = sapply(c("Admin@Risk2025!", "User@Risk2025!"), sodium::password_store),
+  permissions = c("admin", "user"),
+  name = c("Administrator", "User"),
   stringsAsFactors = FALSE,
   row.names = NULL
 )

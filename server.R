@@ -29,12 +29,33 @@ server <- function(input, output, session) {
     } else {
       shinyjs::show("login-content")
       shinyjs::hide("main-content")
+      # Reset to Report Gallery when logging out
+      updateTabItems(session, "sidebar", "carousel")
     }
   })
 
   # User info for role-based access
   user_info <- reactive({
     credentials()$info
+  })
+
+  # Reactive output for UI conditional panels
+  output$user_is_admin <- reactive({
+    req(credentials()$user_auth)
+    !is.null(user_info()) && user_info()$permissions == "admin"
+  })
+  outputOptions(output, "user_is_admin", suspendWhenHidden = FALSE)
+
+  # Security: Redirect non-admin users away from restricted tabs
+  observe({
+    req(credentials()$user_auth)
+    if (!is.null(user_info()) && user_info()$permissions != "admin") {
+      # Check if user is on a restricted tab
+      if (!is.null(input$sidebar) && input$sidebar %in% c("upload", "manager")) {
+        # Redirect to Report Gallery
+        updateTabItems(session, "sidebar", "carousel")
+      }
+    }
   })
 
   # Define the upload directory
@@ -125,7 +146,7 @@ server <- function(input, output, session) {
     session$sendCustomMessage("updateCarouselData", list(totalFiles = nrow(values$files)))
 
     # Create file cards
-    file_cards <- lapply(1:nrow(values$files), function(i) {
+    file_cards <- lapply(seq_len(nrow(values$files)), function(i) {
       file_info <- values$files[i, ]
 
       div(class = "file-card",
@@ -168,7 +189,7 @@ server <- function(input, output, session) {
   observe({
     req(values$files)
 
-    lapply(1:nrow(values$files), function(i) {
+    lapply(seq_len(nrow(values$files)), function(i) {
       observeEvent(input[[paste0("quick_serve_", i)]], {
         filename <- values$files$filename[i]
         file_path <- file.path(upload_dir, filename)
@@ -201,12 +222,13 @@ server <- function(input, output, session) {
   # File upload handling
   observeEvent(input$upload_btn, {
     req(credentials()$user_auth)  # Require authentication
+    req(user_info()$permissions == "admin")  # Only admin can upload
     req(input$file)
 
     uploaded_count <- 0
     error_count <- 0
 
-    for (i in 1:nrow(input$file)) {
+    for (i in seq_len(nrow(input$file))) {
       file_info <- input$file[i, ]
 
       # Check if it's an HTML file

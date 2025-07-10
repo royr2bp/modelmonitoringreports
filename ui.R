@@ -3,6 +3,7 @@
 ui <- dashboardPage(
   dashboardHeader(
     title = "Model Monitoring Reports",
+    disable = FALSE,  # Disable sidebar toggle
     tags$li(class = "dropdown", style = "padding: 8px;",
       shinyauthr::logoutUI("logout")
     )
@@ -11,8 +12,14 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(id = "sidebar",
       menuItem("Report Gallery", tabName = "carousel", icon = icon("chart-line")),
-      menuItem("Upload Reports", tabName = "upload", icon = icon("upload")),
-      menuItem("Report Manager", tabName = "manager", icon = icon("cogs"))
+      conditionalPanel(
+        condition = "output.user_is_admin == true",
+        menuItem("Upload Reports", tabName = "upload", icon = icon("upload"))
+      ),
+      conditionalPanel(
+        condition = "output.user_is_admin == true",
+        menuItem("Report Manager", tabName = "manager", icon = icon("cogs"))
+      )
     )
   ),
 
@@ -175,6 +182,11 @@ ui <- dashboardPage(
         .main-header .navbar {
           background-color: var(--alteryx-blue) !important;
           border: none !important;
+        }
+
+        /* Hide sidebar toggle button */
+        .navbar-nav > .sidebar-toggle {
+          display: none !important;
         }
 
         /* Sidebar Styling */
@@ -685,20 +697,40 @@ ui <- dashboardPage(
 
       # Upload Tab
       tabItem(tabName = "upload",
-        fluidRow(
-          box(
-            title = "Upload HTML File", status = "primary", solidHeader = TRUE,
-            width = 12,
-            div(class = "upload-section",
-              fileInput("file", "Choose HTML File",
-                       accept = c(".html", ".htm"),
-                       multiple = TRUE,  # Allow multiple files
-                       width = "100%"),
-              br(),
-              actionButton("upload_btn", "Save Files", class = "btn-success", icon = icon("save")),
-              br(), br(),
-              div(id = "upload_status_container",
-                verbatimTextOutput("upload_status")
+        conditionalPanel(
+          condition = "output.user_is_admin == true",
+          fluidRow(
+            box(
+              title = "Upload HTML File", status = "primary", solidHeader = TRUE,
+              width = 12,
+              div(class = "upload-section",
+                fileInput("file", "Choose HTML File",
+                         accept = c(".html", ".htm"),
+                         multiple = TRUE,  # Allow multiple files
+                         width = "100%"),
+                br(),
+                actionButton("upload_btn", "Save Files", class = "btn-success", icon = icon("save")),
+                br(), br(),
+                div(id = "upload_status_container",
+                  verbatimTextOutput("upload_status")
+                )
+              )
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "output.user_is_admin == false",
+          fluidRow(
+            box(
+              title = "Access Denied", status = "danger", solidHeader = TRUE,
+              width = 12,
+              div(
+                style = "text-align: center; padding: 40px;",
+                h3("Access Denied", style = "color: #d62728; margin-bottom: 20px;"),
+                p("You do not have permission to access this page.",
+                  style = "font-size: 16px; color: #5f6368;"),
+                p("Redirecting to Report Gallery...",
+                  style = "font-size: 14px; color: #5f6368; margin-top: 20px;")
               )
             )
           )
@@ -707,16 +739,36 @@ ui <- dashboardPage(
 
       # File Manager Tab
       tabItem(tabName = "manager",
-        fluidRow(
-          box(
-            title = "File Management", status = "primary", solidHeader = TRUE,
-            width = 12,
-            h4("Uploaded HTML Files", style = "color: #495057; margin-bottom: 20px;"),
-            DT::dataTableOutput("files_table"),
-            br(),
-            div(style = "text-align: center;",
-              actionButton("refresh_btn", "Refresh List", class = "btn-info", icon = icon("sync-alt")),
-              actionButton("delete_btn", "Delete Selected", class = "btn-danger", icon = icon("trash-alt"))
+        conditionalPanel(
+          condition = "output.user_is_admin == true",
+          fluidRow(
+            box(
+              title = "File Management", status = "primary", solidHeader = TRUE,
+              width = 12,
+              h4("Uploaded HTML Files", style = "color: #495057; margin-bottom: 20px;"),
+              DT::dataTableOutput("files_table"),
+              br(),
+              div(style = "text-align: center;",
+                actionButton("refresh_btn", "Refresh List", class = "btn-info", icon = icon("sync-alt")),
+                actionButton("delete_btn", "Delete Selected", class = "btn-danger", icon = icon("trash-alt"))
+              )
+            )
+          )
+        ),
+        conditionalPanel(
+          condition = "output.user_is_admin == false",
+          fluidRow(
+            box(
+              title = "Access Denied", status = "danger", solidHeader = TRUE,
+              width = 12,
+              div(
+                style = "text-align: center; padding: 40px;",
+                h3("Access Denied", style = "color: #d62728; margin-bottom: 20px;"),
+                p("You do not have permission to access this page.",
+                  style = "font-size: 16px; color: #5f6368;"),
+                p("Redirecting to Report Gallery...",
+                  style = "font-size: 14px; color: #5f6368; margin-top: 20px;")
+              )
             )
           )
         )
