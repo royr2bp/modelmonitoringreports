@@ -7,7 +7,7 @@ LABEL maintainer="riddhiman.roy@bharatpe.com"
 # Install system dependencies
 # USER root
 RUN useradd -ms /bin/bash myuser
-USER myuser
+USER root
 RUN apt-get update && apt-get install -y \
     libcurl4-gnutls-dev \
     libssl-dev \
@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
     r-cran-sodium \
     libsodium-dev \
     && rm -rf /var/lib/apt/lists/*
+
+USER root
 
 # Install R packages
 RUN R -e "install.packages(c('shiny', 'shinydashboard', 'DT', 'htmltools', 'shinyjs', 'sodium', 'scrypt'), repos='https://cran.rstudio.com/')"
