@@ -2,7 +2,7 @@
 FROM rocker/shiny:latest
 
 # Set the maintainer label
-LABEL maintainer="your-email@example.com"
+LABEL maintainer="riddhiman.roy@bharatpe.com"
 
 # Install system dependencies
 # USER root
