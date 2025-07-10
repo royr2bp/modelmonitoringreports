@@ -5,7 +5,10 @@ FROM rocker/shiny:latest
 LABEL maintainer="your-email@example.com"
 
 # Install system dependencies
-RUN sudo apt-get update && apt-get install -y \
+# USER root
+RUN useradd -ms /bin/bash myuser
+USER myuser
+RUN apt-get update && apt-get install -y \
     libcurl4-gnutls-dev \
     libssl-dev \
     libxml2-dev \
@@ -59,6 +62,10 @@ RUN echo "run_as shiny;" > /etc/shiny-server/shiny-server.conf && \
     echo "    directory_index on;" >> /etc/shiny-server/shiny-server.conf && \
     echo "  }" >> /etc/shiny-server/shiny-server.conf && \
     echo "}" >> /etc/shiny-server/shiny-server.conf
+
+
+LABEL security.cap_drop="ALL"
+LABEL security.cap_add="SETGID,SETUID,DAC_OVERRIDE"
 
 # Start Shiny Server
 CMD ["/usr/bin/shiny-server"]
