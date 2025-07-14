@@ -9,7 +9,6 @@ A simple R Shiny application that allows users to upload HTML files, save them l
 - **File Viewing**: Select and preview HTML files directly in the application
 - **File Storage**: Automatically saves uploaded files with timestamps to prevent conflicts
 - **File Deletion**: Remove unwanted files with confirmation dialog
-- **Responsive UI**: Clean dashboard interface using shinydashboard
 
 ## Installation
 
@@ -23,12 +22,7 @@ install.packages(c("shiny", "shinydashboard", "DT"))
 
 ### Running the Application
 
-1. Open R or RStudio and set your working directory to this folder:
-   ```r
-   setwd("path/to/Cascade")
-   ```
-
-2. Run the application:
+1. Run the application:
    ```r
    # Option 1: Run directly
    shiny::runApp("app.R")
@@ -37,7 +31,7 @@ install.packages(c("shiny", "shinydashboard", "DT"))
    source("app.R")
    ```
 
-3. The application will open in your default web browser, typically at `http://127.0.0.1:xxxx`
+2. The application will open in your default web browser, typically at `http://127.0.0.1:xxxx`
 
 ## Usage
 
@@ -66,26 +60,3 @@ install.packages(c("shiny", "shinydashboard", "DT"))
 - All uploaded files are stored in the `uploads/` directory (created automatically)
 - Files are automatically renamed with timestamps (e.g., `myfile_20250702_143022.html`)
 - Only `.html` and `.htm` files are accepted
-
-## Technical Details
-
-- Built with R Shiny and shinydashboard
-- Uses DT package for interactive file tables
-- Responsive design that works on desktop and mobile
-- Error handling for file operations
-- Automatic file validation
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Files not displaying**: Ensure the HTML files are valid and don't contain external dependencies that aren't accessible
-2. **Upload fails**: Check that the file is a valid HTML file and not corrupted
-3. **Permission errors**: Ensure the application has write permissions to create the `uploads/` directory
-
-### Dependencies
-
-If you encounter issues with external CSS/JS in your HTML files, make sure those resources are:
-- Included inline in the HTML file, or
-- Accessible via CDN links, or
-- Uploaded as additional files to the same directory
