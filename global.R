@@ -66,7 +66,6 @@ create_file_card <- function(filename, size, modified, index) {
     `data-index` = index,
     div(
       class = "card",
-      onclick = paste0("selectFile('", filename, "')"),
       div(
         class = "card-header",
         h5(
@@ -80,12 +79,11 @@ create_file_card <- function(filename, size, modified, index) {
         p(strong("Modified: "), format(as.POSIXct(modified), "%Y-%m-%d %H:%M"), style = "margin: 4px 0; font-size: 13px; color: #5f6368;"),
         div(
           style = "text-align: center; margin-top: 12px;",
-          actionButton(
-            paste0("view_", gsub("[^A-Za-z0-9]", "_", filename)),
+          tags$button(
             "Open Report",
             class = "btn btn-primary btn-sm",
-            style = "width: 100%; background-color: #1f77b4; border-color: #1f77b4; font-weight: 600; padding: 8px 16px;",
-            onclick = paste0("event.stopPropagation(); serveFile('", filename, "');")
+            style = "width: 100%; background-color: #1f77b4; border-color: #1f77b4; font-weight: 600; padding: 8px 16px; border: none; border-radius: 4px; color: white; cursor: pointer;",
+            onclick = paste0('console.log("Button clicked for file: ', gsub('"', '\\\\"', filename), '"); Shiny.setInputValue("carousel_file_action", "', gsub('"', '\\\\"', filename), '", {priority: "event"});')
           )
         )
       )

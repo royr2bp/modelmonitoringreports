@@ -225,17 +225,18 @@ ui <- dashboardPage(
         .carousel-container {
           background-color: #ffffff;
           border-radius: 8px;
-          padding: 24px;
-          margin: 20px 0;
+          padding: 40px;
+          margin: 30px 0;
           box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
           border: 1px solid var(--alteryx-border);
-          min-height: 400px;
+          min-height: 450px;
         }
 
         .carousel-wrapper {
           position: relative;
           overflow: hidden;
-          margin: 24px 0;
+          margin: 10px 0;
+          padding: 10px;
         }
 
         .carousel-content {
@@ -243,9 +244,12 @@ ui <- dashboardPage(
           flex-direction: row !important;
           transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           align-items: flex-start;
-          gap: 20px;
+          gap: 30px;
           overflow-x: auto;
           flex-wrap: nowrap;
+          position: relative;
+          contain: layout style;
+          padding: 15px;
         }
 
         .file-card {
@@ -254,6 +258,9 @@ ui <- dashboardPage(
           flex-basis: auto !important;
           display: inline-block !important;
           vertical-align: top;
+          position: relative;
+          contain: layout style;
+          margin: 15px;
         }
 
         .file-card .card {
@@ -304,7 +311,11 @@ ui <- dashboardPage(
         .card-body {
           padding: 16px;
           height: 150px;
-          display: block;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: relative;
+          overflow: hidden;
         }
 
         .card-body p {
@@ -319,12 +330,19 @@ ui <- dashboardPage(
           font-weight: 600;
         }
 
+        .card-body .btn {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          margin: 0;
+        }
+
         .carousel-nav {
           display: flex;
           justify-content: center;
           align-items: center;
-          margin: 24px 0;
-          gap: 20px;
+          margin: 10px 0;
+          gap: 10px;
         }
 
         .carousel-nav h4 {
@@ -365,28 +383,11 @@ ui <- dashboardPage(
         }
 
         .carousel-indicators {
-          display: flex;
-          justify-content: center;
-          gap: 8px;
-          margin: 20px 0;
+          display: none !important;
         }
 
         .carousel-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background-color: var(--alteryx-medium-gray);
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .carousel-dot.active {
-          background-color: var(--alteryx-blue);
-          transform: scale(1.3);
-        }
-
-        .carousel-dot:hover {
-          background-color: var(--alteryx-light-blue);
+          display: none !important;
         }
 
         .no-files-message {
@@ -543,7 +544,7 @@ ui <- dashboardPage(
 
       function updateCarousel() {
         const content = document.querySelector('.carousel-content');
-        const cardWidth = 300; // Width including margins
+        const cardWidth = 380; // Width including margins and padding
         const visibleCards = Math.floor(window.innerWidth / cardWidth);
         const maxIndex = Math.max(0, totalFiles - visibleCards);
 
@@ -560,12 +561,11 @@ ui <- dashboardPage(
         if (prevBtn) prevBtn.disabled = currentIndex === 0;
         if (nextBtn) nextBtn.disabled = currentIndex >= maxIndex;
 
-        // Update indicators
-        updateIndicators();
+        // Indicators removed for cleaner UI
       }
 
       function moveCarousel(direction) {
-        const cardWidth = 300;
+        const cardWidth = 380;
         const visibleCards = Math.floor(window.innerWidth / cardWidth);
         const maxIndex = Math.max(0, totalFiles - visibleCards);
 
@@ -583,12 +583,7 @@ ui <- dashboardPage(
         updateCarousel();
       }
 
-      function updateIndicators() {
-        const indicators = document.querySelectorAll('.carousel-dot');
-        indicators.forEach((dot, index) => {
-          dot.classList.toggle('active', index === currentIndex);
-        });
-      }
+      // updateIndicators function removed - indicators disabled for cleaner UI
 
       function selectFile(filename) {
         // Remove previous selection
@@ -670,12 +665,9 @@ ui <- dashboardPage(
                   div(class = "carousel-content",
                     uiOutput("carousel_files")
                   )
-                ),
-
-                # Carousel indicators
-                div(class = "carousel-indicators",
-                  uiOutput("carousel_indicators")
                 )
+
+                # Carousel indicators removed for cleaner UI
               )
             )
           )

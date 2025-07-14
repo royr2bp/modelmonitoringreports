@@ -172,32 +172,32 @@ server <- function(input, output, session) {
 
     do.call(tagList, indicators)
   })
+  # Handle file serving from carousel buttons
+  observeEvent(input$carousel_file_action, {
+    req(credentials()$user_auth)  # Require authentication
+    req(input$carousel_file_action)
 
-  # Handle quick serve from carousel
-  observe({
-    req(values$files)
+    cat("Carousel file action triggered for:", input$carousel_file_action, "\n")
 
-    lapply(seq_len(nrow(values$files)), function(i) {
-      observeEvent(input[[paste0("quick_serve_", i)]], {
-        filename <- values$files$filename[i]
-        file_path <- file.path(upload_dir, filename)
+    filename <- input$carousel_file_action
+    file_path <- file.path(upload_dir, filename)
 
-        if (file.exists(file_path)) {
-          file_url <- paste0(session$clientData$url_protocol, "//",
-                            session$clientData$url_hostname, ":",
-                            session$clientData$url_port,
-                            session$clientData$url_pathname,
-                            "reports/", filename)
+    if (file.exists(file_path)) {
+      file_url <- paste0(session$clientData$url_protocol, "//",
+                        session$clientData$url_hostname, ":",
+                        session$clientData$url_port,
+                        session$clientData$url_pathname,
+                        "reports/", filename)
 
-          session$sendCustomMessage("openFullScreen", list(
-            url = file_url,
-            filename = filename
-          ))
-        } else {
-          showNotification("File not found!", type = "error")
-        }
-      })
-    })
+      cat("Opening file URL:", file_url, "\n")
+
+      session$sendCustomMessage("openFullScreen", list(
+        url = file_url,
+        filename = filename
+      ))
+    } else {
+      showNotification("File not found!", type = "error")
+    }
   })
 
   # Display selected file name
