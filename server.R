@@ -59,7 +59,7 @@ server <- function(input, output, session) {
   })
 
   # Define the upload directory
-  upload_dir <- "uploaded_files"
+  upload_dir <- "uploads"
 
   # Create upload directory if it doesn't exist
   if (!dir.exists(upload_dir)) {

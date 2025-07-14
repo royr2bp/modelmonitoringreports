@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     libsodium-dev \
     && rm -rf /var/lib/apt/lists/*
 
-USER root
+USER myuser
 
 # Install R packages
 RUN R -e "install.packages(c('shiny', 'shinydashboard', 'DT', 'htmltools', 'shinyjs', 'sodium', 'scrypt'), repos='https://cran.rstudio.com/')"
@@ -38,14 +38,12 @@ COPY server.R .
 COPY ui.R .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p uploads uploaded_files www && \
+RUN mkdir -p uploads && \
     chown -R shiny:shiny /srv/shiny-server && \
     chmod -R 755 /srv/shiny-server
 
 # Copy any existing files to the appropriate directories
 COPY uploads/ ./uploads/
-COPY uploaded_files/ ./uploaded_files/
-COPY www/ ./www/
 
 # Ensure proper permissions for all directories
 RUN chown -R shiny:shiny /srv/shiny-server && \

@@ -25,11 +25,6 @@ if (!dir.exists("uploads")) {
   dir.create("uploads")
 }
 
-# Create www directory if it doesn't exist
-if (!dir.exists("www")) {
-  dir.create("www")
-}
-
 # Function to get file list with metadata
 get_file_list <- function() {
   files <- list.files("uploads", pattern = "\\.(html|htm)$", full.names = FALSE)

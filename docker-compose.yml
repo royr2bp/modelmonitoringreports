@@ -6,10 +6,6 @@ services:
     volumes:
       # Mount volumes for persistent storage of uploaded files
       - ./uploads:/srv/shiny-server/uploads
-      - ./uploaded_files:/srv/shiny-server/uploaded_files
-      - ./www:/srv/shiny-server/www
-      # Mount logs for debugging
-      - ./logs:/var/log/shiny-server
     environment:
       - SHINY_LOG_STDERR=1
     restart: unless-stopped

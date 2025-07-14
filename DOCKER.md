@@ -37,8 +37,6 @@
      --name shiny-reports \
      -p 3838:3838 \
      -v $(pwd)/uploads:/srv/shiny-server/uploads \
-     -v $(pwd)/uploaded_files:/srv/shiny-server/uploaded_files \
-     -v $(pwd)/www:/srv/shiny-server/www \
      modelmonitoringreports
    ```
 
@@ -56,9 +54,6 @@ Once running, access the application at: `http://localhost:3838`
 
 The Docker setup includes persistent volume mounts for:
 - `uploads/` - Stores uploaded HTML files
-- `uploaded_files/` - Alternative upload directory
-- `www/` - Static web assets
-- `logs/` - Application logs (docker-compose only)
 
 ## Troubleshooting
 
