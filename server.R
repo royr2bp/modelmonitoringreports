@@ -145,26 +145,14 @@ server <- function(input, output, session) {
     # Send total files count to JavaScript
     session$sendCustomMessage("updateCarouselData", list(totalFiles = nrow(values$files)))
 
-    # Create file cards
+    # Create file cards using the function from global.R
     file_cards <- lapply(seq_len(nrow(values$files)), function(i) {
       file_info <- values$files[i, ]
-
-      div(class = "file-card",
-        onclick = paste0("selectFile('", file_info$filename, "')"),
-        div(class = "card",
-          div(class = "card-header",
-            h5(file_info$filename)
-          ),
-          div(class = "card-body",
-            p(strong("Size: "), paste0(file_info$size, " KB")),
-            p(strong("Modified: "), file_info$modified),
-            div(style = "margin-top: 10px;",
-              actionButton(paste0("quick_serve_", i), "Quick View",
-                         class = "btn-info btn-sm",
-                         onclick = paste0("serveFile('", file_info$filename, "')"))
-            )
-          )
-        )
+      create_file_card(
+        filename = file_info$filename,
+        size = file_info$size,
+        modified = file_info$modified,
+        index = i
       )
     })
 

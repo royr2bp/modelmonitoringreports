@@ -239,14 +239,21 @@ ui <- dashboardPage(
         }
 
         .carousel-content {
-          display: flex;
+          display: flex !important;
+          flex-direction: row !important;
           transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           align-items: flex-start;
           gap: 20px;
+          overflow-x: auto;
+          flex-wrap: nowrap;
         }
 
         .file-card {
-          flex-shrink: 0;
+          flex-shrink: 0 !important;
+          flex-grow: 0 !important;
+          flex-basis: auto !important;
+          display: inline-block !important;
+          vertical-align: top;
         }
 
         .file-card .card {
@@ -297,9 +304,7 @@ ui <- dashboardPage(
         .card-body {
           padding: 16px;
           height: 150px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          display: block;
         }
 
         .card-body p {

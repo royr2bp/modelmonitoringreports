@@ -64,7 +64,6 @@ create_file_card <- function(filename, size, modified, index) {
   div(
     class = "file-card",
     `data-index` = index,
-    style = "display: inline-block; margin: 10px; vertical-align: top;",
     div(
       class = "card",
       onclick = paste0("selectFile('", filename, "')"),
@@ -77,10 +76,8 @@ create_file_card <- function(filename, size, modified, index) {
       ),
       div(
         class = "card-body",
-        div(
-          p(strong("Size: "), size, style = "margin: 4px 0; font-size: 13px; color: #5f6368;"),
-          p(strong("Modified: "), format(as.POSIXct(modified), "%Y-%m-%d %H:%M"), style = "margin: 4px 0; font-size: 13px; color: #5f6368;")
-        ),
+        p(strong("Size: "), size, style = "margin: 4px 0; font-size: 13px; color: #5f6368;"),
+        p(strong("Modified: "), format(as.POSIXct(modified), "%Y-%m-%d %H:%M"), style = "margin: 4px 0; font-size: 13px; color: #5f6368;"),
         div(
           style = "text-align: center; margin-top: 12px;",
           actionButton(
