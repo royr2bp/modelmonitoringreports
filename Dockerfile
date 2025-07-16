@@ -49,7 +49,7 @@ RUN chown -R shiny:shiny /srv/shiny-server && \
     chmod -R 775 /srv/shiny-server
 
 # Expose the port that Shiny Server runs on
-EXPOSE 3838x`
+EXPOSE 3838
 
 # Configure Shiny Server
 RUN echo "run_as shiny;" > /etc/shiny-server/shiny-server.conf && \
