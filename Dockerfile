@@ -45,10 +45,11 @@ COPY uploads/ ./uploads/
 
 # Ensure proper permissions for all directories
 RUN chown -R shiny:shiny /srv/shiny-server && \
+    chown -R shiny:shiny /srv/shiny-server/uploads && \
     chmod -R 775 /srv/shiny-server
 
 # Expose the port that Shiny Server runs on
-EXPOSE 3838
+EXPOSE 3838x`
 
 # Configure Shiny Server
 RUN echo "run_as shiny;" > /etc/shiny-server/shiny-server.conf && \
