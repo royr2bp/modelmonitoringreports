@@ -22,28 +22,10 @@ RUN R -e "install.packages('remotes', repos='https://cran.rstudio.com/'); remote
 # Remove the default shiny app
 RUN rm -rf /srv/shiny-server/*
 
-# Create the app directory
+# Create the app directory and set up permissions (as root)
 WORKDIR /srv/shiny-server
 
-# Copy the Shiny app files
-COPY app.R .
-COPY global.R .
-COPY server.R .
-COPY ui.R .
-
-# Create necessary directories with proper permissions
-RUN mkdir -p uploads
-RUN chown -R shiny:shiny /srv/shiny-server
-RUN chmod -R 775 /srv/shiny-server
-USER shiny
-
-# Copy any existing files to the appropriate directories
-COPY uploads/ ./uploads/
-
-# Expose the port that Shiny Server runs on
-EXPOSE 3838
-
-# Configure Shiny Server
+# Configure Shiny Server (as root)
 RUN echo "run_as shiny;" > /etc/shiny-server/shiny-server.conf && \
     echo "server {" >> /etc/shiny-server/shiny-server.conf && \
     echo "  listen 3838;" >> /etc/shiny-server/shiny-server.conf && \
@@ -54,9 +36,29 @@ RUN echo "run_as shiny;" > /etc/shiny-server/shiny-server.conf && \
     echo "  }" >> /etc/shiny-server/shiny-server.conf && \
     echo "}" >> /etc/shiny-server/shiny-server.conf
 
+# Create the uploads directory
+RUN mkdir -p uploads
 
-LABEL security.cap_drop="ALL"
-LABEL security.cap_add="SETGID,SETUID,DAC_OVERRIDE"
+# Copy the Shiny app files
+COPY app.R .
+COPY global.R .
+COPY server.R .
+COPY ui.R .
+
+# Copy uploads directory contents (if any exist)
+COPY uploads/ ./uploads/
+
+# Fix ownership after copying files
+RUN chown -R shiny:shiny /srv/shiny-server
+RUN chown -R shiny:shiny /srv/shiny-server/uploads
+RUN chmod -R 775 /srv/shiny-server/
+RUN chmod -R 775 /srv/shiny-server/uploads
+
+# Change to non-root user (do this last)
+USER shiny
+
+# Expose the port that Shiny Server runs on
+EXPOSE 3838
 
 # Start Shiny Server
 CMD ["/usr/bin/shiny-server"]
