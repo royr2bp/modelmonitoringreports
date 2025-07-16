@@ -1,273 +1,171 @@
 ContainerPort:
-  - envoyPort: 8799
-idleTimeout: 1800s
-name: app
-port: 8080
-servicePort: 80
-supportStreaming: false
-useHTTP2: false
+  - name: app
+    port: 3838
+    servicePort: 80
 EnvVariables: []
 GracePeriod: 30
+appLabels:
+  Environment: prod
 LivenessProbe:
   Path: ""
-command: []
-failureThreshold: 3
-httpHeaders: []
-initialDelaySeconds: 20
-periodSeconds: 10
-port: 8080
-scheme: ""
-successThreshold: 1
-tcp: false
-timeoutSeconds: 5
+  command: []
+  failureThreshold: 3
+  httpHeaders: []
+  initialDelaySeconds: 40
+  periodSeconds: 10
+  port: 3838
+  scheme: ""
+  successThreshold: 1
+  tcp: false
+  timeoutSeconds: 5
 MaxSurge: 1
 MaxUnavailable: 0
 MinReadySeconds: 60
 ReadinessProbe:
   Path: ""
-command: []
-failureThreshold: 3
-httpHeaders: []
-initialDelaySeconds: 20
-periodSeconds: 10
-port: 8080
-scheme: ""
-successThreshold: 1
-tcp: false
-timeoutSeconds: 5
+  command: []
+  failureThreshold: 3
+  httpHeaders: []
+  initialDelaySeconds: 40
+  periodSeconds: 10
+  port: 3838
+  scheme: ""
+  successThreshold: 1
+  tcp: false
+  timeoutSeconds: 5
 Spec:
   Affinity:
-  Key: null
-Values: nodes
-key: ""
-StartupProbe:
-  Path: ""
-command: []
-failureThreshold: 3
-httpHeaders: []
-initialDelaySeconds: 20
-periodSeconds: 10
-port: 8080
-successThreshold: 1
-tcp: false
-timeoutSeconds: 5
-ambassadorMapping:
-  ambassadorId: ""
-cors: {}
-enabled: false
-hostname: devtron.example.com
-labels: {}
-prefix: /
-  retryPolicy: {}
-rewrite: ""
-tls:
-  context: ""
-create: false
-hosts: []
-secretName: ""
+    Key: null
+    Values: nodes
+    key: ""
 args:
   enabled: false
-value:
-  - /bin/sh
-- -c
-- touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+  value:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
 autoscaling:
   MaxReplicas: 2
-MinReplicas: 1
-TargetCPUUtilizationPercentage: 90
-TargetMemoryUtilizationPercentage: 80
-annotations: {}
-behavior: {}
-enabled: false
-extraMetrics: []
-labels: {}
+  MinReplicas: 1
+  TargetCPUUtilizationPercentage: 90
+  TargetMemoryUtilizationPercentage: 80
+  enabled: true
 command:
   enabled: false
-value: []
-workingDir: {}
-containerSecurityContext: {}
-containerSpec:
-  lifecycle:
-  enabled: false
-postStart:
-  httpGet:
-  host: example.com
-path: /example
-port: 90
-preStop:
-  exec:
-  command:
-  - sleep
-- "10"
+  value: []
 containers: []
 dbMigrationConfig:
   enabled: false
+env:
+  - name: JVM_OPTS
+    value: -Xms1g -Xmx3g -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=70 -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heapdump -XX:+ExitOnOutOfMemoryError
 envoyproxy:
   configMapName: ""
-image: docker.io/envoyproxy/envoy:v1.16.0
-lifecycle: {}
-resources:
-  limits:
-  cpu: 50m
-memory: 50Mi
-requests:
-  cpu: 50m
-memory: 50Mi
-hostAliases: []
+  image: envoyproxy/envoy:v1.14.1
 image:
   pullPolicy: IfNotPresent
-imagePullSecrets: []
-ingress:
-  annotations: {}
-className: ""
-enabled: false
-hosts:
-  - host: chart-example1.local
-pathType: ImplementationSpecific
-paths:
-  - /example1
-- host: chart-example2.local
-pathType: ImplementationSpecific
-paths:
-  - /example2
-- /example2/healthz
-labels: {}
-tls: []
 ingressInternal:
-  annotations: {}
-className: ""
-enabled: false
-hosts:
-  - host: chart-example1.internal
-pathType: ImplementationSpecific
-paths:
-  - /example1
-- host: chart-example2.internal
-pathType: ImplementationSpecific
-paths:
-  - /example2
-- /example2/healthz
-tls: []
+  annotations:
+    kubernetes.io/ingress.class: nginx-nlb
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/send_timeout: "600"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,token,app_info,app_version,clientName,hash,clientid,installId,simId,device,appversion,platform,longitude,latitude, sec-ch-ua, sec-ch-ua-mobile, Accept, Referer, sec-ch-ua-platform
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+  enabled: true
+  hosts:
+    - host: modelmonitoring.bharatpe.in
+      pathType: ImplementationSpecific
+      paths:
+        - /
+  tls: []
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: nginx-nlb
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/send_timeout: "600"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: PUT, GET, POST, OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,token,app_info,app_version,clientName,hash,clientid,installId,simId,device,appversion,platform,longitude,latitude, sec-ch-ua, sec-ch-ua-mobile, Accept, Referer, sec-ch-ua-platform
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+  enabled: false
+  hosts:
+    - host: ""
+      pathType: ImplementationSpecific
+      paths:
+        - /
+  tls: []
 initContainers: []
-istio:
-  authorizationPolicy:
-  action: null
-annotations: {}
-enabled: false
-labels: {}
-provider: {}
-rules: []
-destinationRule:
-  annotations: {}
-enabled: false
-labels: {}
-subsets: []
-trafficPolicy: {}
-enable: false
-gateway:
-  annotations: {}
-enabled: false
-host: example.com
-labels: {}
-tls:
-  enabled: false
-secretName: secret-name
-peerAuthentication:
-  annotations: {}
-enabled: false
-labels: {}
-mtls:
-  mode: ""
-portLevelMtls: {}
-selector:
-  enabled: false
-requestAuthentication:
-  annotations: {}
-enabled: false
-jwtRules: []
-labels: {}
-selector:
-  enabled: false
-virtualService:
-  annotations: {}
-enabled: false
-gateways: []
-hosts: []
-http: []
-labels: {}
-kedaAutoscaling:
-  advanced: {}
-authenticationRef: {}
-enabled: false
-envSourceContainerName: ""
-maxReplicaCount: 2
-minReplicaCount: 1
-triggerAuthentication:
-  enabled: false
-name: ""
-spec: {}
-triggers: []
-networkPolicy:
-  annotations: {}
-egress: []
-enabled: false
-ingress: []
-labels: {}
-podSelector:
-  matchExpressions: []
-matchLabels: {}
-policyTypes: []
 pauseForSecondsBeforeSwitchActive: 30
-podAnnotations: {}
-podDisruptionBudget: {}
-podLabels: {}
-podSecurityContext: {}
 prometheus:
   release: monitoring
-rawYaml: []
 replicaCount: 1
 resources:
   limits:
-  cpu: "0.05"
-memory: 50Mi
-requests:
-  cpu: "0.01"
-memory: 10Mi
-restartPolicy: Always
-rolloutAnnotations: {}
-rolloutLabels: {}
+    cpu: "2.5"
+    memory: 2500Mi
+  requests:
+    cpu: "1.4"
+    memory: 1800Mi
 secret:
   data: {}
-enabled: false
+  enabled: false
 server:
   deployment:
-  image: ""
-image_tag: 1-95af053
+    image: ""
+    image_tag: 1-95af053
 service:
   annotations: {}
-loadBalancerSourceRanges: []
-type: ClusterIP
-serviceAccount:
-  annotations: {}
-create: false
-name: ""
+  type: ClusterIP
 servicemonitor:
-  additionalLabels: {}
-tolerations: []
-topologySpreadConstraints: []
-volumeMounts: []
-volumes: []
+  enabled: true
+rawYaml:
+  - apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+      name: modelmonitoring-pv
+    spec:
+      capacity:
+        storage: 2Gi
+      volumeMode: Filesystem
+      accessModes:
+        - ReadWriteMany
+      persistentVolumeReclaimPolicy: Retain
+      storageClassName: model-efs-sc
+      csi:
+        driver: efs.csi.aws.com
+        volumeHandle: fs-0df84352a3547f60c
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: model-efs-claim
+    spec:
+      accessModes:
+        - ReadWriteMany
+      storageClassName: model-efs-sc
+      resources:
+        requests:
+          storage: 2Gi
+volumeMounts:
+  - mountPath: /srv/shiny-server/uploads
+    name: uploads-efs
+    subPath: uploads
+  - mountPath: /var/log/shiny-server
+    name: uploads-efs
+    subPath: logs
+volumes:
+  - name: uploads-efs
+    persistentVolumeClaim:
+      claimName: model-efs-claim
 waitForSecondsBeforeScalingDown: 30
-winterSoldier:
-  action: sleep
-annotation: {}
-apiVersion: pincher.devtron.ai/v1alpha1
-enabled: false
-fieldSelector:
-  - AfterTime(AddTime(ParseTime({{metadata.creationTimestamp}}, '2006-01-02T15:04:05Z'), '5m'), Now())
-labels: {}
-targetReplicas: []
-timeRangesWithZone:
-  timeRanges: []
-timeZone: Asia/Kolkata
-type: Rollout

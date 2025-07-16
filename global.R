@@ -21,18 +21,18 @@ user_base <- data.frame(
 )
 
 # Create uploads directory if it doesn't exist
-if (!dir.exists("uploads")) {
-  dir.create("uploads")
-}
+#if (!dir.exists("uploads")) {
+#  dir.create("uploads")
+#}
 
 # Function to get file list with metadata
 get_file_list <- function() {
-  files <- list.files("uploads", pattern = "\\.(html|htm)$", full.names = FALSE)
+  files <- list.files("/srv/shiny-server/uploads", pattern = "\\.(html|htm)$", full.names = FALSE)
   if (length(files) > 0) {
     file_info <- data.frame(
       filename = files,
       size = sapply(files, function(f) {
-        size_bytes <- file.info(file.path("uploads", f))$size
+        size_bytes <- file.info(file.path("/srv/shiny-server/uploads", f))$size
         if (size_bytes < 1024) {
           paste(size_bytes, "B")
         } else if (size_bytes < 1024^2) {
@@ -42,9 +42,9 @@ get_file_list <- function() {
         }
       }),
       modified = sapply(files, function(f) {
-        as.character(file.info(file.path("uploads", f))$mtime)
+        as.character(file.info(file.path("/srv/shiny-server/uploads", f))$mtime)
       }),
-      path = file.path("uploads", files),
+      path = file.path("/srv/shiny-server/uploads", files),
       stringsAsFactors = FALSE
     )
   } else {
