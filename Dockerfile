@@ -1,11 +1,7 @@
 # Use the official R base image with Shiny Server
 FROM rocker/shiny:latest
 
-# Set the maintainer label
-LABEL maintainer="riddhiman.roy@bharatpe.com"
-
 # Install system dependencies
-
 USER root
 
 RUN apt-get update && apt-get install -y \
@@ -36,17 +32,13 @@ COPY server.R .
 COPY ui.R .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p uploads && \
-    chown -R shiny:shiny /srv/shiny-server && \
-    chmod -R 775 /srv/shiny-server
+RUN mkdir -p uploads
+RUN chown -R shiny:shiny /srv/shiny-server
+RUN chmod -R 775 /srv/shiny-server
+USER shiny
 
 # Copy any existing files to the appropriate directories
 COPY uploads/ ./uploads/
-
-# Ensure proper permissions for all directories
-RUN chown -R shiny:shiny /srv/shiny-server && \
-    chown -R shiny:shiny /srv/shiny-server/uploads && \
-    chmod -R 775 /srv/shiny-server
 
 # Expose the port that Shiny Server runs on
 EXPOSE 3838
